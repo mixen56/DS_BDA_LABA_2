@@ -1,0 +1,5 @@
+Cassandra: remove tables: DATA, RESULT
+Connection error: ('Unable to connect to any servers', {'127.0.0.1:9042': ConnectionRefusedError(111, "Tried connecting to [('127.0.0.1', 9042)]. Last error: Connection refused")})
+Cassandra: remove keyspace LABA_2
+Cassandra: create keyspace LABA_2
+Cassandra: create table DATA
