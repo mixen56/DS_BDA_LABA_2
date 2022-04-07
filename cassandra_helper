@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# call cassandra sql
+cs_call="cqlsh -e"
+
+KS="LABA_2" # KEYSPACE
+T="DATA"    # TABLE
+R="RESULT"  # RESULT TABLE
+IF="$2"     # INPUT FILE
+
+clean(){
+    echo "Cassandra: remove tables: $T, $R"
+    $cs_call "DROP TABLE IF EXISTS $KS.$T;"
+    $cs_call "DROP TABLE IF EXISTS $KS.$R;"
+    sleep 5
+
+    echo "Cassandra: remove keyspace $KS"
+    $cs_call "DROP KEYSPACE IF EXISTS $KS;"
+    sleep 5
+}
+
+prepare(){
+    echo "Cassandra: create keyspace $KS"
+    local cmd="CREATE KEYSPACE $KS \
+               WITH REPLICATION = \
+               {'class' : 'SimpleStrategy', 'replication_factor' : 1};"
+    $cs_call "$cmd"
+    sleep 5
+
+    echo "Cassandra: create table $T"
+    local cmd="CREATE TABLE $KS.$T (
+               id_news int,
+               id_user int, 
+               time int, 
+               id_interaction int,
+               PRIMARY KEY(id_news, id_user, time, id_interaction));"
+    $cs_call "$cmd"
+    sleep 5
+}
+
+upload(){
+    echo "Cassandra: upload data from $IF"
+    local cmd="COPY $KS.$T FROM '$IF' WITH DELIMITER='|' AND HEADER=TRUE"
+    $cs_call "$cmd"
+}
+
+show(){
+    echo "Cassandra: show first 10 rows from $T"
+    local cmd="SELECT * FROM $KS.$T LIMIT 10;"
+    $cs_call "$cmd"
+    sleep 5
+
+    echo "Cassandra: show first 10 rows from $R"
+    local cmd="SELECT * FROM $KS.$R LIMIT 10;"
+    $cs_call "$cmd"
+    sleep 5
+}
+
+$1

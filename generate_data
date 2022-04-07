@@ -1,0 +1,29 @@
+#!/bin/bash
+# interactions - 1, 2, 3
+# id_news, id_user, time, id_interaction 
+
+iters=100 #default iters
+test -n "$1" && iters=$1 # 1 arg = iters
+
+echo -e "\nGen Data: iters = $iters"
+
+# create output dir
+dir="LABA_2_input"
+mkdir -p $dir 2> /dev/null
+rm -rf $dir/* 2> /dev/null
+
+for (( i=1; i<=$iters; i++ ))
+do
+    id_news=$(( RANDOM ))
+    id_user=$(( RANDOM * RANDOM ))
+    time=$(( RANDOM % 10800 )) # in seconds - max 3 hours
+    id_interaction=$(( RANDOM % 3 + 1 ))
+
+    echo -en "$(( $i * 100 / $iters )) %\r" 1>&2 # spinner
+
+    # json for connector
+    echo "{\"id_news\":$id_news,\"id_user\":$id_user,\"time\":$time,\"id_interaction\":$id_interaction}" \
+        >> "$dir/LABA_2.json"
+done
+
+echo "Gen Data: Done"

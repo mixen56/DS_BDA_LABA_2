@@ -1,0 +1,27 @@
+#!/bin/bash
+
+all_services="ssh cassandra"
+target_services="cassandra"
+
+echo -e "\nServices processing"
+if [ "$1" = "--start" ]; then
+    for service in $all_services
+    do
+        echo "Starting $service"
+        service $service start
+        sleep 5
+    done
+elif [ "$1" = "--stop" ]; then
+    for service in $target_services
+    do
+        echo "Stopping $service"
+        service $service stop
+        sleep 5
+    done
+else
+    echo "specify: --start or --stop"
+    exit 1
+fi
+
+echo -e "\nServices processing: Done"
+

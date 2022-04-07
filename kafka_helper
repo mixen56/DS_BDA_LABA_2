@@ -1,0 +1,55 @@
+#!/bin/bash
+KAFKA_HOME=/opt/kafka-3.1.0-src
+worker_config=connector/connect-standalone.properties
+connector_config=connector/cassandra-sink-standalone.properties
+topic="my_topic"
+
+prepare(){
+    echo -e "\nStart zookeeper"
+    zookeeper-server-start.sh $KAFKA_HOME/config/zookeeper.properties &
+    sleep 10
+
+    echo -e "\nStart kafka-server"
+    kafka-server-start.sh $KAFKA_HOME/config/server.properties &
+    sleep 10
+
+    echo -e "\nCreate topic $topic"
+    kafka-topics.sh --create --topic $topic --bootstrap-server localhost:9092
+    sleep 5
+
+    echo -e "\nStart connector"
+    connect-standalone.sh $worker_config $connector_config &
+    sleep 10
+}
+
+clean(){
+    echo -e "\nStop connector"
+    kill `ps -AF | grep -i "connect-standalone" \
+        | grep -v 'grep' | head -1 | awk '{print $2}'`
+    sleep 5
+
+    echo -e "\nRemove topic $topic"
+    kafka-topics.sh --delete --topic $topic --bootstrap-server localhost:9092
+    sleep 5
+
+    echo -e "\nStop kafka-server"
+    kafka-server-stop.sh
+    sleep 5
+
+    echo -e "\nStop zookeper"
+    zookeeper-server-stop.sh
+    sleep 5
+}
+
+upload(){
+    echo "Load data from kafka to cassandra"
+    kafka-console-producer.sh \
+        --topic $topic \
+        --bootstrap-server localhost:9092 \
+        --property value.serializer=custom.class.serialization.JsonSerializer \
+        < LABA_2_input/LABA_2.json
+    sleep 5
+}
+
+
+$1

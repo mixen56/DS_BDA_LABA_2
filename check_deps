@@ -1,0 +1,60 @@
+#!/bin/bash
+spark_install(){
+    wget https://dlcdn.apache.org/spark/spark-3.2.1/spark-3.2.1-bin-hadoop3.2.tgz
+    test "$?" != "0" && echo "download spark error" && exit 1
+    #
+    tar xvf spark-3.2.1-bin-hadoop3.2.tgz
+    mv spark-3.2.1-bin-hadoop3.2 /opt/.
+    rm spark-3.2.1-bin-hadoop3.2.tgz
+    echo "PATH=/opt/spark-3.2.1-bin-hadoop3.2/bin/:$PATH" >> ~/.bashrc
+    source ~/.bashrc
+}
+
+kafka_install(){
+    wget https://dlcdn.apache.org/kafka/3.1.0/kafka-3.1.0-src.tgz
+    test "$?" != "0" && echo "download kafka error" && exit 1
+    #
+    tar xvf kafka-3.1.0-src.tgz
+    mv kafka-3.1.0-src /opt/.
+    rm kafka-3.1.0-src.tgz
+    echo "PATH=/opt/kafka-3.1.0-src/bin:$PATH" >> ~/.bashrc
+    source ~/.bashrc
+}
+
+cassandra_install(){
+    echo "deb https://downloads.apache.org/cassandra/debian 40x main" >> /etc/apt/sources.list
+    curl https://downloads.apache.org/cassandra/KEYS | sudo apt-key add -
+    apt-get update > /dev/null
+    apt-get install cassandra || { echo "cassandra install error"; exit 1; }
+}
+
+connector_install(){
+    wget https://downloads.datastax.com/kafka/kafka-connect-cassandra-sink.tar.gz
+    tar zxf kafka-connect-cassandra-sink-1.4.0.tar.gz
+    mkdir -p /opt/kafka_plugins
+    mv ./kafka-connect-cassandra-sink-1.4.0/kafka-connect-cassandra-sink-1.4.0.jar /opt/kafka_plugins
+    rm -r kafka-connect-cassandra-sink-1.4.0
+    rm kafka-connect-cassandra-sink-1.4.0.tar.gz
+}
+
+test "`whoami`" = "root" || { echo "You must be root"; exit 1; }
+echo "apt-get update"
+apt-get update > /dev/null
+
+echo -e "\nCheck: openjdk"
+java -version || apt-get install openjdk-8-jdk
+echo -e "\nCheck: scala"
+scala -version || apt-get install scala
+
+mkdir -p /opt
+echo -e "\nCheck: spark"
+spark-shell --version || spark_install
+echo -e "\nCheck: kafka"
+which kafka-topics.sh || kafka_install
+echo -e "\nCheck: cassandra"
+dpkg -l cassandra || cassandra_install
+echo -e "\nCheck: connector"
+test -f /opt/kafka_plugins/kafka-connect-cassandra-sink-1.4.0.jar || connector_install
+ls -l /opt/kafka_plugins/kafka-connect-cassandra-sink-1.4.0.jar
+
+echo -e "\nAll dependencies: OK"
