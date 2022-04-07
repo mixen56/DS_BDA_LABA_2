@@ -54,7 +54,7 @@ public class LABA_2_CORE {
         log.info("Create Spark Session");
         SparkSession sc = SparkSession
                 .builder()
-                .master("local")
+                .master("local[6]")
                 .appName("LABA_2")
                 .getOrCreate();
         return sc;
